@@ -26,7 +26,10 @@ public class Libro {
     }
 
     @Override
-    public String toString() {
-        return titulo + " de " + autor + ", " + numCopias + " copias disponibles";
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Libro libro = (Libro) obj;
+        return titulo.equals(libro.titulo);
     }
 }

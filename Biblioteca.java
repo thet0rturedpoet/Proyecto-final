@@ -4,11 +4,15 @@ public class Biblioteca {
     private ArrayList<Libro> libros;
     private ArrayList<Usuario> usuarios;
     private Libro[][] estanterias;
+    private int siguienteFila;
+    private int siguienteColumna;
 
     public Biblioteca(int filas, int columnas) {
         this.libros = new ArrayList<>();
         this.usuarios = new ArrayList<>();
         this.estanterias = new Libro[filas][columnas];
+        this.siguienteFila = 0;
+        this.siguienteColumna = 0;
     }
 
     public void registrarUsuario(Usuario usuario) {
@@ -17,33 +21,41 @@ public class Biblioteca {
 
     public void agregarLibro(Libro libro) {
         libros.add(libro);
+        ubicarLibro(libro); 
     }
 
     public void eliminarLibro(String titulo) {
-        libros.removeIf(libro -> libro.getTitulo().equals(titulo));
+        int indice = buscarLibro(titulo);
+        if (indice != -1) {
+            libros.remove(indice);
+            
+        }
     }
 
-    public Libro buscarLibro(String titulo) {
-        for (Libro libro : libros) {
-            if (libro.getTitulo().equals(titulo)) {
-                return libro;
+    public int buscarLibro(String titulo) {
+        for (int i = 0; i < libros.size(); i++) {
+            if (libros.get(i).getTitulo().equals(titulo)) {
+                return i; 
             }
         }
-        return null;
+        return -1;
     }
 
     public boolean prestarLibro(String titulo, String idUsuario) {
-        Libro libro = buscarLibro(titulo);
-        if (libro != null && libro.getNumCopias() > 0) {
-            for (Usuario usuario : usuarios) {
-                if (usuario.getIdUsuario().equals(idUsuario)) {
-                    if (usuario.puedePedirMasLibros()) {
-                        usuario.prestarLibro(libro);
-                        libro.setNumCopias(libro.getNumCopias() - 1);
-                        return true;
-                    } else {
-                        System.out.println("El usuario ha alcanzado el límite de libros permitidos.");
-                        return false;
+        int indice = buscarLibro(titulo);
+        if (indice != -1) {
+            Libro libro = libros.get(indice);
+            if (libro.getNumCopias() > 0) {
+                for (Usuario usuario : usuarios) {
+                    if (usuario.getIdUsuario().equals(idUsuario)) {
+                        if (usuario.puedePedirMasLibros()) {
+                            usuario.prestarLibro(libro);
+                            libro.setNumCopias(libro.getNumCopias() - 1);
+                            return true;
+                        } else {
+                            System.out.println("El usuario ha alcanzado el límite de libros permitidos.");
+                            return false;
+                        }
                     }
                 }
             }
@@ -52,8 +64,9 @@ public class Biblioteca {
     }
 
     public boolean devolverLibro(String titulo, String idUsuario) {
-        Libro libro = buscarLibro(titulo);
-        if (libro != null) {
+        int indice = buscarLibro(titulo);
+        if (indice != -1) {
+            Libro libro = libros.get(indice);
             for (Usuario usuario : usuarios) {
                 if (usuario.getIdUsuario().equals(idUsuario) && usuario.getLibrosPrestados().contains(libro)) {
                     usuario.devolverLibro(libro);
@@ -74,17 +87,26 @@ public class Biblioteca {
         return new ArrayList<>();
     }
 
-    public void ubicarLibro(String titulo, int fila, int columna) {
-        Libro libro = buscarLibro(titulo);
-        if (libro != null) {
-            estanterias[fila][columna] = libro;
+    public void ubicarLibro(Libro libro) {
+        if (siguienteFila < estanterias.length) {
+            estanterias[siguienteFila][siguienteColumna] = libro;
+            siguienteColumna++;
+            if (siguienteColumna >= estanterias[siguienteFila].length) {
+                siguienteColumna = 0;
+                siguienteFila++;
+            }
+        } else {
+            System.out.println("No hay espacio en las estanterías para más libros.");
         }
     }
 
     public int[] consultarUbicacion(String titulo) {
+        if (titulo == null) {
+            throw new IllegalArgumentException("El título no puede ser nulo");
+        }
         for (int i = 0; i < estanterias.length; i++) {
             for (int j = 0; j < estanterias[i].length; j++) {
-                if (estanterias[i][j] != null && estanterias[i][j].getTitulo().equals(titulo)) {
+                if (estanterias[i][j] != null && titulo.equals(estanterias[i][j].getTitulo())) {
                     return new int[]{i, j};
                 }
             }
@@ -93,10 +115,6 @@ public class Biblioteca {
     }
 
     public void reubicarLibro(String titulo, int nuevaFila, int nuevaColumna) {
-        if (nuevaFila < 0 || nuevaFila >= estanterias.length || nuevaColumna < 0 || nuevaColumna >= estanterias[nuevaFila].length) {
-            System.out.println("La ubicación es inválida.");
-            return;
-        }
         int[] ubicacionActual = consultarUbicacion(titulo);
         if (ubicacionActual != null) {
             Libro libro = estanterias[ubicacionActual[0]][ubicacionActual[1]];
@@ -118,5 +136,21 @@ public class Biblioteca {
                 }
             }
         }
+    }
+
+    public ArrayList<String> getTitulos() {
+        ArrayList<String> titulos = new ArrayList<>();
+        for (Libro libro : libros) {
+            titulos.add(libro.getTitulo());
+        }
+        return titulos;
+    }
+
+    public int[] getUbicacionPorIndice(int index) {
+        if (index < 0 || index >= libros.size()) {
+            return null;
+        }
+        Libro libro = libros.get(index);
+        return consultarUbicacion(libro.getTitulo());
     }
 }

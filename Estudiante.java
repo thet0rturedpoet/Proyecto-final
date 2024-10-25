@@ -7,6 +7,6 @@ public class Estudiante extends Usuario {
 
     @Override
     public boolean puedePedirMasLibros() {
-        return this.librosPrestados.size() < LIMITE_LIBROS;
+        return getLibrosPrestados().size() < LIMITE_LIBROS;
     }
 }

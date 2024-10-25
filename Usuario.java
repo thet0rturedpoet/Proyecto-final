@@ -1,9 +1,10 @@
 import java.util.ArrayList;
 
-public abstract class Usuario {
-    protected String nombre;
-    protected String idUsuario;
-    protected ArrayList<Libro> librosPrestados;
+public class Usuario {
+    private String nombre;
+    private String idUsuario;
+    private ArrayList<Libro> librosPrestados;
+    private static final int LIMITE_LIBROS = 5;
 
     public Usuario(String nombre, String idUsuario) {
         this.nombre = nombre;
@@ -11,34 +12,23 @@ public abstract class Usuario {
         this.librosPrestados = new ArrayList<>();
     }
 
-    public abstract boolean puedePedirMasLibros();
+    public String getIdUsuario() {
+        return idUsuario;
+    }
 
     public void prestarLibro(Libro libro) {
-        if (puedePedirMasLibros()) {
-            librosPrestados.add(libro);
-        } else {
-            System.out.println("El usuario ha alcanzado el límite de libros permitidos.");
-        }
+        librosPrestados.add(libro);
     }
 
     public void devolverLibro(Libro libro) {
         librosPrestados.remove(libro);
     }
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getIdUsuario() {
-        return idUsuario;
+    public boolean puedePedirMasLibros() {
+        return librosPrestados.size() < LIMITE_LIBROS;
     }
 
     public ArrayList<Libro> getLibrosPrestados() {
         return librosPrestados;
-    }
-
-    @Override
-    public String toString() {
-        return "Usuario " + nombre + ", ID " + idUsuario + ", Libros prestados: " + librosPrestados.size();
     }
 }
