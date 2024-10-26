@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class BibliotecaGUI extends JFrame {
     private Biblioteca biblioteca;
@@ -16,7 +17,7 @@ public class BibliotecaGUI extends JFrame {
 
     private void initUI() {
         setTitle("Sistema de Gestión de Biblioteca");
-        setSize(900, 700);
+        setSize(600, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
@@ -112,7 +113,7 @@ public class BibliotecaGUI extends JFrame {
         outputArea.setEditable(false);
         outputPanel.add(new JScrollPane(outputArea), BorderLayout.CENTER); 
 
-        getContentPane().add(outputPanel, BorderLayout.SOUTH); 
+        getContentPane().add(outputPanel, BorderLayout.NORTH); 
 
         setVisible(true);
     }
@@ -218,7 +219,7 @@ public class BibliotecaGUI extends JFrame {
     
         inputPanel.add(agregarEstudianteButton);
         inputPanel.add(agregarProfesorButton);
-    
+
         int result = JOptionPane.showConfirmDialog(null, inputPanel, "Registro de Usuarios", JOptionPane.OK_CANCEL_OPTION);
         if (result == JOptionPane.OK_OPTION) {
         }
@@ -246,9 +247,9 @@ public class BibliotecaGUI extends JFrame {
                 JOptionPane.showMessageDialog(null, "El título o el ID de usuario no pueden estar vacíos", "ERROR", JOptionPane.ERROR_MESSAGE);
             }
 
-            boolean prestamoExitoso = biblioteca.prestarLibro(titulo, idUsuario);
-            if(prestamoExitoso){
-                outputArea.append("Libro prestado: " + titulo + " (ID Usuario: " + idUsuario + "\n");
+            boolean prestamoSi = biblioteca.prestarLibro(titulo, idUsuario);
+            if(prestamoSi){
+                outputArea.append("Libro prestado: " + titulo + " (ID Usuario: " + idUsuario + ") \n");
             }else{
                 outputArea.append("No se pudo prestar el libro, asegúrese de su disponibilidad \n" +
                 "y si el usuario no ha exedido su límite de préstamos. \n");
@@ -260,20 +261,120 @@ public class BibliotecaGUI extends JFrame {
     }
 
     private void devolverLibro(){
+        tituloField = new JTextField();
+        idUsuarioField = new JTextField();
 
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new GridLayout(0, 2, 10, 10));
+
+        inputPanel.add(new JLabel("Ingrese el título del libro a devolver:"));
+        inputPanel.add(tituloField);
+        inputPanel.add(new JLabel("ID del usuario:"));
+        inputPanel.add(idUsuarioField);
+
+        int result = JOptionPane.showConfirmDialog(null, inputPanel, "Devolver Libro", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            String titulo = tituloField.getText();
+            String idUsuario = idUsuarioField.getText();
+
+            if(titulo.isEmpty() || idUsuario.isEmpty()){
+                JOptionPane.showMessageDialog(null, "El título o el ID de usuario no pueden estar vacíos", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+
+            boolean devolucionSi = biblioteca.devolverLibro(titulo, idUsuario);
+            if(devolucionSi){
+                outputArea.append("Libro devuelto: " + titulo + " (ID Usuario: " + idUsuario + ") \n");
+            }else{
+                outputArea.append("No se pudo prestar el libro. \n");
+            }
+
+        }
     }
 
     private void consultarPrestamos(){
+        idUsuarioField = new JTextField();
 
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new GridLayout(0, 2, 10, 10));
+
+        inputPanel.add(new JLabel("ID del usuario"));
+        inputPanel.add(idUsuarioField);
+
+        int result = JOptionPane.showConfirmDialog(null, inputPanel, "Consultar préstamos", JOptionPane.OK_CANCEL_OPTION);
+        if(result == JOptionPane.OK_OPTION){
+            String idUsuario = idUsuarioField.getText();
+
+            if(!idUsuario.isEmpty()){
+                ArrayList<Libro> librosPrestados = biblioteca.consultarLibrosPrestados(idUsuario);
+                outputArea.append("Libro/s prestado/s: \n");
+                for(Libro libro : librosPrestados){
+                    outputArea.append("- " + libro.getTitulo() + "\n");
+                }
+            }else{
+                JOptionPane.showMessageDialog(null, "Ingrese un ID de usuario válido", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void ubicacionLibro() {
+        tituloField = new JTextField(10);
 
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new GridLayout(2, 1, 10, 10));
+        inputPanel.add(new JLabel("Título del libro a ubicar"));
+        inputPanel.add(tituloField);
+    
+        int result = JOptionPane.showConfirmDialog(null, inputPanel, "Ubicar Libro", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            String titulo = tituloField.getText();
+            if (!titulo.isEmpty()) {
+                int[] ubicacion = biblioteca.consultarUbicacion(titulo);
+                if (ubicacion != null) {
+                    outputArea.append("El libro se encuentra en la estantería: " + ubicacion[0] + ", posición: " + ubicacion[1] + ".\n");
+                } else {
+                    outputArea.append("Libro no encontrado en las estanterías.\n");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "El título no puede estar vacío.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
+    
 
-    private void reubicarLibro(){
-
+    private void reubicarLibro() {
+        tituloField = new JTextField(10);
+        JTextField filaField = new JTextField(5);
+        JTextField columnaField = new JTextField(5);
+    
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new GridLayout(0, 2, 10, 10));
+    
+        inputPanel.add(new JLabel("Título del libro:"));
+        inputPanel.add(tituloField);
+        inputPanel.add(new JLabel("Nueva fila:"));
+        inputPanel.add(filaField);
+        inputPanel.add(new JLabel("Nueva columna:"));
+        inputPanel.add(columnaField);
+    
+        int result = JOptionPane.showConfirmDialog(null, inputPanel, "Reubicar Libro", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            String titulo = tituloField.getText();
+            try {
+                int nuevaFila = Integer.parseInt(filaField.getText());
+                int nuevaColumna = Integer.parseInt(columnaField.getText());
+    
+                biblioteca.reubicarLibro(titulo, nuevaFila, nuevaColumna);
+                outputArea.append("Libro reubicado: " + titulo + " a la estantería " + nuevaFila + ", posición " + nuevaColumna + ".\n");
+    
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Por favor, ingrese números válidos para fila y columna.", "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                JOptionPane.showMessageDialog(null, "La nueva ubicación está fuera de los límites de las estanterías.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
+    
+    
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
